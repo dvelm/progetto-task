@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # Definisce il servizio principale dell'applicazione (Backend + Frontend)
+  app:
+    # Indica a Docker di costruire l'immagine partendo dal Dockerfile nella cartella corrente
+    build: .
+    
+    # Mappa la porta 3000 del tuo computer (host) alla porta 3000 del container
+    ports:
+      - "3000:3000"
+      
+    # Crea un volume persistente per salvare i dati del database SQLite
+    # Questo evita che i dati vengano persi quando il container viene stoppato
+    volumes:
+      - sqlite_data:/app/prisma/data
+      
+    # All'avvio del container, esegue prima la sincronizzazione del database (db push)
+    # e poi avvia il server Node.js. Questo garantisce che le tabelle esistano sempre.
+    command: sh -c "npx prisma db push && npm run start"
+
+# Definisce il volume nominato che verrà gestito da Docker
+volumes:
+  sqlite_data:

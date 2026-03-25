@@ -1,0 +1,54 @@
+// Questo è il file di configurazione principale di Prisma.
+// Definisce la connessione al database e la struttura delle tabelle (modelli).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Specifica che stiamo usando PostgreSQL come database (Neon)
+  provider = "postgresql"
+  // Il database è su Neon PostgreSQL serverless
+  url      = env("DATABASE_URL")
+}
+
+// --- Modello: Project (Progetto) ---
+model Project {
+  id          String   @id @default(cuid()) // Chiave primaria, usa cuid() per compatibilità PostgreSQL
+  name        String   // Nome del progetto
+  budget      Float    // Budget allocato (numero decimale)
+  description String?  // Descrizione del progetto (il '?' indica che è opzionale)
+  hours_used  Float    @default(0) // Ore utilizzate, default a 0
+
+  // Relazione molti-a-molti: Un progetto può avere molti task
+  tasks       Task[]   @relation("ProjectTasks")
+
+  createdAt   DateTime @default(now()) // Data di creazione automatica
+  updatedAt   DateTime @updatedAt      // Data di aggiornamento automatica
+}
+
+// --- Modello: Task (Attività) ---
+model Task {
+  id          String    @id @default(cuid()) // Chiave primaria, usa cuid()
+  title       String    // Titolo del task
+  description String?   // Descrizione del task (opzionale)
+
+  // Relazione molti-a-molti: Un task può appartenere a molti progetti
+  projects    Project[] @relation("ProjectTasks")
+
+  // Relazione molti-a-molti: Un task può avere molti tag
+  tags        Tag[]     @relation("TaskTags")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// --- Modello: Tag ---
+// Tabella separata per normalizzare i tag invece di usare una semplice lista di stringhe
+model Tag {
+  id    String @id @default(cuid()) // Chiave primaria, usa cuid()
+  name  String @unique // Il nome del tag deve essere unico (es. "frontend")
+
+  // Relazione molti-a-molti: Un tag può essere associato a molti task
+  tasks Task[] @relation("TaskTags")
+}
